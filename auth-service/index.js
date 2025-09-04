@@ -167,7 +167,7 @@ const initializeDatabase = async () => {
 // Service Info
 app.get("/api/info", (req, res) => {
   res.status(200).json({
-    message: "Auth Service Information",
+    message: "Auth Service Information v1",
   });
 });
 app.get("/", (req, res) => {
