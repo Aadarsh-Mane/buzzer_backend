@@ -12,7 +12,7 @@ RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev
 COPY . .
 
 ENV NODE_ENV=production
-ENV PORT=6004          # <— set the service's PORT here
+ENV PORT=6004         
 
 # (Optional) run as non-root
 RUN addgroup -S app && adduser -S app -G app
