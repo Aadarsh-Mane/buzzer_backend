@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  auth-service:
+    build: ./auth-service
+    env_file: ./auth-service/.env
+    restart: always
+    ports:
+      - "127.0.0.1:6001:6001"
+
+  mock-interview-service:
+    build: ./mock-interview-service
+    env_file: ./mock-interview-service/.env
+    restart: always
+    ports:
+      - "127.0.0.1:6002:6002"
+
+  room-interview-service:
+    build: ./room-interview-service
+    env_file: ./room-interview-service/.env
+    restart: always
+    ports:
+      - "127.0.0.1:6003:6003"
+
+  live-interview-service:
+    build: ./live-interview-service
+    env_file: ./live-interview-service/.env
+    restart: always
+    ports:
+      - "127.0.0.1:6004:6004"
