@@ -47,7 +47,16 @@ const connectWithRetry = () => {
 app.use(express.json());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:4001",
+    origin: [
+      "http://localhost:4001",
+      "http://localhost:3000",
+      "https://yourdomain.com",
+      "https://auth.lanbix.com",
+      "http://localhost:3000",
+      "http://localhost:4001",
+      "http://localhost:6001",
+      "https://interview-backend-rho.vercel.app",
+    ],
     credentials: true,
   })
 );
