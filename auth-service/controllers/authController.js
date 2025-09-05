@@ -25,13 +25,11 @@ export const uploadResume = async (req, res) => {
     user.candidateInfo = user.candidateInfo || {};
     user.candidateInfo.resume = req.file.path;
     await user.save();
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Resume uploaded to Cloudinary",
-        url: req.file.path,
-      });
+    res.status(200).json({
+      success: true,
+      message: "Resume uploaded to Cloudinary",
+      url: req.file.path,
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: "Failed to upload resume" });
   }
@@ -261,8 +259,11 @@ export const googleCallback = async (req, res) => {
     console.log("Google OAuth login successful");
 
     // Redirect to frontend with success
-    res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
+    res.redirect(
+      `https://interview-backend-rho.vercel.app/dashboard/dashboard`
+    );
   } catch (error) {
+    console.log("Google OAuth callback error:", error);
     console.error("Google OAuth callback error:", error.message);
     res.redirect(`${process.env.FRONTEND_URL}/login?error=server_error`);
   }
