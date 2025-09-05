@@ -259,9 +259,7 @@ export const googleCallback = async (req, res) => {
     console.log("Google OAuth login successful");
 
     // Redirect to frontend with success
-    res.redirect(
-      `https://interview-backend-rho.vercel.app/dashboard/dashboard`
-    );
+    res.redirect(`https://interview-backend-rho.vercel.app/dashboard`);
   } catch (error) {
     console.log("Google OAuth callback error:", error);
     console.error("Google OAuth callback error:", error.message);
