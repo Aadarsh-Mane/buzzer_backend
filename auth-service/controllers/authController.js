@@ -15,7 +15,9 @@ export const getProfile = async (req, res) => {
 export const uploadResume = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ success: false, error: "No file uploaded" });
+      return res
+        .status(400)
+        .json({ success: false, error: "No file uploaded" });
     }
     // req.file.path is the Cloudinary URL
     // Save the Cloudinary URL to the user profile
@@ -23,7 +25,13 @@ export const uploadResume = async (req, res) => {
     user.candidateInfo = user.candidateInfo || {};
     user.candidateInfo.resume = req.file.path;
     await user.save();
-    res.status(200).json({ success: true, message: "Resume uploaded to Cloudinary", url: req.file.path });
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "Resume uploaded to Cloudinary",
+        url: req.file.path,
+      });
   } catch (error) {
     res.status(500).json({ success: false, error: "Failed to upload resume" });
   }
@@ -37,18 +45,20 @@ export const getInterviewHistory = async (req, res) => {
         date: "2025-07-01",
         role: "Frontend Developer",
         status: "Completed",
-        feedback: "Good communication skills."
+        feedback: "Good communication skills.",
       },
       {
         date: "2025-06-15",
         role: "Backend Developer",
         status: "Pending",
-        feedback: null
-      }
+        feedback: null,
+      },
     ];
     res.status(200).json({ success: true, history: sampleHistory });
   } catch (error) {
-    res.status(500).json({ success: false, error: "Failed to fetch interview history" });
+    res
+      .status(500)
+      .json({ success: false, error: "Failed to fetch interview history" });
   }
 };
 // controllers/authController.js
@@ -377,7 +387,9 @@ export const updateProfile = async (req, res) => {
   try {
     const user = req.user;
     if (!user) {
-      return res.status(401).json({ success: false, error: "Not authenticated" });
+      return res
+        .status(401)
+        .json({ success: false, error: "Not authenticated" });
     }
 
     // Main user fields
@@ -393,7 +405,7 @@ export const updateProfile = async (req, res) => {
       education,
       experience,
       skills,
-      preferredRoles
+      preferredRoles,
     } = req.body;
 
     // Update main fields
@@ -415,14 +427,20 @@ export const updateProfile = async (req, res) => {
         user.candidateInfo.skills = Array.isArray(skills)
           ? skills
           : typeof skills === "string"
-          ? skills.split(",").map(s => s.trim()).filter(Boolean)
+          ? skills
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
           : [];
       }
       if (preferredRoles !== undefined) {
         user.candidateInfo.preferredRoles = Array.isArray(preferredRoles)
           ? preferredRoles
           : typeof preferredRoles === "string"
-          ? preferredRoles.split(",").map(r => r.trim()).filter(Boolean)
+          ? preferredRoles
+              .split(",")
+              .map((r) => r.trim())
+              .filter(Boolean)
           : [];
       }
     }
@@ -436,7 +454,9 @@ export const updateProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Profile update error:", error.message);
-    res.status(500).json({ success: false, error: "Server error during profile update" });
+    res
+      .status(500)
+      .json({ success: false, error: "Server error during profile update" });
   }
 };
 
@@ -636,7 +656,4 @@ export const updateUserType = async (req, res) => {
   }
 };
 
-
-
 // ...existing code...
-
