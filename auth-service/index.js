@@ -130,10 +130,11 @@ app.use(
       touchAfter: 24 * 3600,
     }),
     cookie: {
-      secure: NODE_ENV === "production",
+      secure: true, // Always true for both dev and production
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-      sameSite: NODE_ENV === "production" ? "strict" : "lax",
+      sameSite: "none", // Always "none" for cross-site cookies
+      domain: ".lanbix.com", // Always set for subdomain sharing
     },
     name: "auth.session.id",
   })
