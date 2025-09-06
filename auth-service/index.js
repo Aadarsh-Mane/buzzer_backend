@@ -26,6 +26,7 @@ const ALLOWED_ORIGINS = [
   "http://localhost:4001",
   "http://localhost:6001",
   "https://interview-backend-rho.vercel.app",
+  "https://salapakshi.vercel.app",
 ];
 const MONGODB_URI =
   process.env.MONGODB_URI ||

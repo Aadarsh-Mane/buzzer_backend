@@ -56,6 +56,7 @@ app.use(
       "http://localhost:4001",
       "http://localhost:6001",
       "https://interview-backend-rho.vercel.app",
+      "https://salapakshi.vercel.app",
     ],
     credentials: true,
   })
