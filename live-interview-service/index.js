@@ -32,7 +32,10 @@ const PORT = process.env.PORT || 6004;
 const MONGO_URI =
   process.env.MONGO_URI ||
   "mongodb+srv://lanbixinfo:VfcMo7euOiX1mJ1w@interview-backend.p4usgoo.mongodb.net/interview?retryWrites=true&w=majority&appName=Interview-backend";
-
+const SESSION_SECRET =
+  process.env.SESSION_SECRET || "your-secret-key-change-in-production";
+const SERVICE_NAME = "auth-service";
+const SERVICE_VERSION = "v1.0.0";
 // Enhanced MongoDB connection with retry logic
 const connectWithRetry = () => {
   mongoose
@@ -81,6 +84,29 @@ app.use(
     credentials: true,
   })
 );
+app.use(
+  session({
+    secret: SESSION_SECRET, // Must be SAME as auth service
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: MONGO_URI, // Same MongoDB as auth service
+      touchAfter: 24 * 3600,
+    }),
+    cookie: {
+      secure: true,
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+      sameSite: "none",
+      domain: ".lanbix.com",
+    },
+    name: "auth.session.id", // Same cookie name as auth service
+  })
+);
+
+// Add passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Routes
 app.use("/live-interview", liveInterviewRoutes);
