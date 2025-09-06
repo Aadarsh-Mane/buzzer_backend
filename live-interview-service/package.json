@@ -9,26 +9,29 @@
     "dev": "nodemon index.js"
   },
   "dependencies": {
-    "express": "^4.21.2",
-    "mongoose": "^8.7.2",
-    "socket.io": "^4.8.1",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "helmet": "^8.1.0",
-    "morgan": "^1.10.0",
-    "winston": "^3.17.0",
-    "bcrypt": "^5.1.1",
-    "jsonwebtoken": "^9.0.2",
-    "multer": "^1.4.5-lts.1",
-    "cloudinary": "^2.5.1",
-    "openai": "^4.90.0",
     "@google/generative-ai": "^0.21.0",
     "axios": "^1.7.9",
-    "moment": "^2.30.1",
-    "compression": "^1.8.0",
-    "express-rate-limit": "^7.5.1",
+    "bcrypt": "^5.1.1",
+    "cloudinary": "^2.5.1",
     "colors": "^1.4.0",
-    "uuid": "^9.0.1"
+    "compression": "^1.8.0",
+    "connect-mongo": "^5.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.1",
+    "express-session": "^1.18.2",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "moment": "^2.30.1",
+    "mongoose": "^8.7.2",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "openai": "^4.90.0",
+    "passport": "^0.7.0",
+    "socket.io": "^4.8.1",
+    "uuid": "^9.0.1",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"
@@ -37,4 +40,4 @@
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
   }
-} 
+}
