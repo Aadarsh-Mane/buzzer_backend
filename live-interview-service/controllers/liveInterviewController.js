@@ -1,10 +1,11 @@
-import LiveInterview from '../models/LiveInterview.js';
-import aiHelper from '../utils/aiHelper.js';
-import { v4 as uuidv4 } from 'uuid';
+import LiveInterview from "../models/LiveInterview.js";
+import aiHelper from "../utils/aiHelper.js";
+import { v4 as uuidv4 } from "uuid";
 
 class LiveInterviewController {
   // Create a new live interview session
   async createInterview(req, res) {
+    console.log("Creating new interview session");
     try {
       const {
         title,
@@ -17,19 +18,19 @@ class LiveInterviewController {
         scheduledTime,
         candidate,
         interviewer,
-        createdBy
+        createdBy,
       } = req.body;
 
       // Validate required fields
       if (!title || !jobPosition || !company || !candidate || !interviewer) {
         return res.status(400).json({
           success: false,
-          message: 'Missing required fields'
+          message: "Missing required fields",
         });
       }
 
       // Generate unique interview ID
-      const interviewId = `live_${uuidv4().replace(/-/g, '')}`;
+      const interviewId = `live_${uuidv4().replace(/-/g, "")}`;
 
       // Create new interview session
       const interview = new LiveInterview({
@@ -37,8 +38,8 @@ class LiveInterviewController {
         title,
         jobPosition,
         company,
-        interviewType: interviewType || 'mixed',
-        language: language || 'English',
+        interviewType: interviewType || "mixed",
+        language: language || "English",
         jobDescription,
         meetingLink,
         scheduledTime: new Date(scheduledTime),
@@ -46,34 +47,34 @@ class LiveInterviewController {
           userId: candidate.userId,
           name: candidate.name,
           email: candidate.email,
-          resume: candidate.resume
+          resume: candidate.resume,
         },
         interviewer: {
           userId: interviewer.userId,
           name: interviewer.name,
-          email: interviewer.email
+          email: interviewer.email,
         },
-        createdBy
+        createdBy,
       });
 
       await interview.save();
 
       res.status(201).json({
         success: true,
-        message: 'Live interview session created successfully',
+        message: "Live interview session created successfully",
         data: {
           interviewId: interview.interviewId,
           title: interview.title,
           status: interview.status,
-          scheduledTime: interview.scheduledTime
-        }
+          scheduledTime: interview.scheduledTime,
+        },
       });
     } catch (error) {
-      console.error('Error creating interview:', error);
+      console.error("Error creating interview:", error);
       res.status(500).json({
         success: false,
-        message: 'Failed to create interview session',
-        error: error.message
+        message: "Failed to create interview session",
+        error: error.message,
       });
     }
   }
@@ -88,20 +89,20 @@ class LiveInterviewController {
       if (!interview) {
         return res.status(404).json({
           success: false,
-          message: 'Interview not found'
+          message: "Interview not found",
         });
       }
 
       res.status(200).json({
         success: true,
-        data: interview
+        data: interview,
       });
     } catch (error) {
-      console.error('Error getting interview:', error);
+      console.error("Error getting interview:", error);
       res.status(500).json({
         success: false,
-        message: 'Failed to get interview details',
-        error: error.message
+        message: "Failed to get interview details",
+        error: error.message,
       });
     }
   }
@@ -117,20 +118,27 @@ class LiveInterviewController {
       if (!interview) {
         return res.status(404).json({
           success: false,
-          message: 'Interview not found'
+          message: "Interview not found",
         });
       }
 
       // Update participant join time
-      if (role === 'candidate' && interview.candidate.userId === userId) {
+      if (role === "candidate" && interview.candidate.userId === userId) {
         interview.candidate.joinedAt = new Date();
-      } else if (role === 'interviewer' && interview.interviewer.userId === userId) {
+      } else if (
+        role === "interviewer" &&
+        interview.interviewer.userId === userId
+      ) {
         interview.interviewer.joinedAt = new Date();
       }
 
       // Start interview if both participants have joined
-      if (interview.candidate.joinedAt && interview.interviewer.joinedAt && interview.status === 'scheduled') {
-        interview.status = 'active';
+      if (
+        interview.candidate.joinedAt &&
+        interview.interviewer.joinedAt &&
+        interview.status === "scheduled"
+      ) {
+        interview.status = "active";
         interview.startedAt = new Date();
       }
 
@@ -138,19 +146,19 @@ class LiveInterviewController {
 
       res.status(200).json({
         success: true,
-        message: 'Successfully joined interview',
+        message: "Successfully joined interview",
         data: {
           interviewId: interview.interviewId,
           status: interview.status,
-          role
-        }
+          role,
+        },
       });
     } catch (error) {
-      console.error('Error joining interview:', error);
+      console.error("Error joining interview:", error);
       res.status(500).json({
         success: false,
-        message: 'Failed to join interview',
-        error: error.message
+        message: "Failed to join interview",
+        error: error.message,
       });
     }
   }
@@ -166,40 +174,45 @@ class LiveInterviewController {
       if (!interview) {
         return res.status(404).json({
           success: false,
-          message: 'Interview not found'
+          message: "Interview not found",
         });
       }
 
       // Update participant leave time
-      if (role === 'candidate' && interview.candidate.userId === userId) {
+      if (role === "candidate" && interview.candidate.userId === userId) {
         interview.candidate.leftAt = new Date();
-      } else if (role === 'interviewer' && interview.interviewer.userId === userId) {
+      } else if (
+        role === "interviewer" &&
+        interview.interviewer.userId === userId
+      ) {
         interview.interviewer.leftAt = new Date();
       }
 
       // End interview if both participants have left
       if (interview.candidate.leftAt && interview.interviewer.leftAt) {
-        interview.status = 'completed';
+        interview.status = "completed";
         interview.endedAt = new Date();
-        interview.duration = Math.round((interview.endedAt - interview.startedAt) / 1000 / 60);
+        interview.duration = Math.round(
+          (interview.endedAt - interview.startedAt) / 1000 / 60
+        );
       }
 
       await interview.save();
 
       res.status(200).json({
         success: true,
-        message: 'Successfully left interview',
+        message: "Successfully left interview",
         data: {
           interviewId: interview.interviewId,
-          status: interview.status
-        }
+          status: interview.status,
+        },
       });
     } catch (error) {
-      console.error('Error leaving interview:', error);
+      console.error("Error leaving interview:", error);
       res.status(500).json({
         success: false,
-        message: 'Failed to leave interview',
-        error: error.message
+        message: "Failed to leave interview",
+        error: error.message,
       });
     }
   }
@@ -215,32 +228,32 @@ class LiveInterviewController {
       if (!interview) {
         return res.status(404).json({
           success: false,
-          message: 'Interview not found'
+          message: "Interview not found",
         });
       }
 
       const questionData = {
         questionId: uuidv4(),
         question,
-        category: category || 'general',
-        difficulty: difficulty || 'medium',
+        category: category || "general",
+        difficulty: difficulty || "medium",
         askedBy,
-        askedAt: new Date()
+        askedAt: new Date(),
       };
 
       await interview.addQuestion(questionData);
 
       res.status(200).json({
         success: true,
-        message: 'Question added successfully',
-        data: questionData
+        message: "Question added successfully",
+        data: questionData,
       });
     } catch (error) {
-      console.error('Error adding question:', error);
+      console.error("Error adding question:", error);
       res.status(500).json({
         success: false,
-        message: 'Failed to add question',
-        error: error.message
+        message: "Failed to add question",
+        error: error.message,
       });
     }
   }
@@ -256,16 +269,18 @@ class LiveInterviewController {
       if (!interview) {
         return res.status(404).json({
           success: false,
-          message: 'Interview not found'
+          message: "Interview not found",
         });
       }
 
       // Find the question and update with response
-      const question = interview.questions.find(q => q.questionId === questionId);
+      const question = interview.questions.find(
+        (q) => q.questionId === questionId
+      );
       if (!question) {
         return res.status(404).json({
           success: false,
-          message: 'Question not found'
+          message: "Question not found",
         });
       }
 
@@ -289,7 +304,7 @@ class LiveInterviewController {
           candidateAnswer: response,
           aiSuggestion: aiAssistance.suggestion,
           timestamp: new Date(),
-          confidence: aiAssistance.confidence
+          confidence: aiAssistance.confidence,
         });
       }
 
@@ -298,19 +313,19 @@ class LiveInterviewController {
 
       res.status(200).json({
         success: true,
-        message: 'Response recorded successfully',
+        message: "Response recorded successfully",
         data: {
           questionId,
           aiSuggestion: question.aiSuggestion,
-          score: question.score
-        }
+          score: question.score,
+        },
       });
     } catch (error) {
-      console.error('Error recording response:', error);
+      console.error("Error recording response:", error);
       res.status(500).json({
         success: false,
-        message: 'Failed to record response',
-        error: error.message
+        message: "Failed to record response",
+        error: error.message,
       });
     }
   }
@@ -326,7 +341,7 @@ class LiveInterviewController {
       if (!interview) {
         return res.status(404).json({
           success: false,
-          message: 'Interview not found'
+          message: "Interview not found",
         });
       }
 
@@ -339,15 +354,15 @@ class LiveInterviewController {
 
       res.status(200).json({
         success: true,
-        message: 'Questions generated successfully',
-        data: questions
+        message: "Questions generated successfully",
+        data: questions,
       });
     } catch (error) {
-      console.error('Error generating questions:', error);
+      console.error("Error generating questions:", error);
       res.status(500).json({
         success: false,
-        message: 'Failed to generate questions',
-        error: error.message
+        message: "Failed to generate questions",
+        error: error.message,
       });
     }
   }
@@ -363,7 +378,7 @@ class LiveInterviewController {
       if (!interview) {
         return res.status(404).json({
           success: false,
-          message: 'Interview not found'
+          message: "Interview not found",
         });
       }
 
@@ -375,15 +390,15 @@ class LiveInterviewController {
 
       res.status(200).json({
         success: true,
-        message: 'AI assistance generated',
-        data: assistance
+        message: "AI assistance generated",
+        data: assistance,
       });
     } catch (error) {
-      console.error('Error getting AI assistance:', error);
+      console.error("Error getting AI assistance:", error);
       res.status(500).json({
         success: false,
-        message: 'Failed to get AI assistance',
-        error: error.message
+        message: "Failed to get AI assistance",
+        error: error.message,
       });
     }
   }
@@ -399,20 +414,22 @@ class LiveInterviewController {
       if (!interview) {
         return res.status(404).json({
           success: false,
-          message: 'Interview not found'
+          message: "Interview not found",
         });
       }
 
       // Update interview status
-      interview.status = 'completed';
+      interview.status = "completed";
       interview.endedAt = new Date();
-      interview.duration = Math.round((interview.endedAt - interview.startedAt) / 1000 / 60);
+      interview.duration = Math.round(
+        (interview.endedAt - interview.startedAt) / 1000 / 60
+      );
       interview.interviewerNotes = interviewerNotes;
       interview.candidateFeedback = candidateFeedback;
 
       // Generate final performance analysis
-      const questions = interview.questions.map(q => q.question);
-      const responses = interview.questions.map(q => q.candidateResponse);
+      const questions = interview.questions.map((q) => q.question);
+      const responses = interview.questions.map((q) => q.candidateResponse);
 
       const performanceAnalysis = await aiHelper.analyzePerformance(
         questions,
@@ -425,7 +442,7 @@ class LiveInterviewController {
         ...interview.performance,
         strengths: performanceAnalysis.strengths,
         weaknesses: performanceAnalysis.weaknesses,
-        overallRating: performanceAnalysis.score
+        overallRating: performanceAnalysis.score,
       };
 
       interview.finalVerdict = performanceAnalysis.recommendation;
@@ -434,20 +451,20 @@ class LiveInterviewController {
 
       res.status(200).json({
         success: true,
-        message: 'Interview ended successfully',
+        message: "Interview ended successfully",
         data: {
           interviewId: interview.interviewId,
           duration: interview.duration,
           performance: interview.performance,
-          finalVerdict: interview.finalVerdict
-        }
+          finalVerdict: interview.finalVerdict,
+        },
       });
     } catch (error) {
-      console.error('Error ending interview:', error);
+      console.error("Error ending interview:", error);
       res.status(500).json({
         success: false,
-        message: 'Failed to end interview',
-        error: error.message
+        message: "Failed to end interview",
+        error: error.message,
       });
     }
   }
@@ -459,17 +476,14 @@ class LiveInterviewController {
       const { role, status, limit = 10, page = 1 } = req.query;
 
       const query = {
-        $or: [
-          { 'candidate.userId': userId },
-          { 'interviewer.userId': userId }
-        ]
+        $or: [{ "candidate.userId": userId }, { "interviewer.userId": userId }],
       };
 
       if (role) {
-        if (role === 'candidate') {
-          query.$or = [{ 'candidate.userId': userId }];
-        } else if (role === 'interviewer') {
-          query.$or = [{ 'interviewer.userId': userId }];
+        if (role === "candidate") {
+          query.$or = [{ "candidate.userId": userId }];
+        } else if (role === "interviewer") {
+          query.$or = [{ "interviewer.userId": userId }];
         }
       }
 
@@ -481,7 +495,7 @@ class LiveInterviewController {
         .sort({ createdAt: -1 })
         .limit(parseInt(limit))
         .skip((parseInt(page) - 1) * parseInt(limit))
-        .select('-aiAssistance.responses');
+        .select("-aiAssistance.responses");
 
       const total = await LiveInterview.countDocuments(query);
 
@@ -493,19 +507,19 @@ class LiveInterviewController {
             total,
             page: parseInt(page),
             limit: parseInt(limit),
-            pages: Math.ceil(total / parseInt(limit))
-          }
-        }
+            pages: Math.ceil(total / parseInt(limit)),
+          },
+        },
       });
     } catch (error) {
-      console.error('Error getting interview history:', error);
+      console.error("Error getting interview history:", error);
       res.status(500).json({
         success: false,
-        message: 'Failed to get interview history',
-        error: error.message
+        message: "Failed to get interview history",
+        error: error.message,
       });
     }
   }
 }
 
-export default new LiveInterviewController(); 
+export default new LiveInterviewController();

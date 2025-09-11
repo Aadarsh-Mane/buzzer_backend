@@ -42,7 +42,7 @@ const MONGO_URI =
   "mongodb+srv://lanbixinfo:VfcMo7euOiX1mJ1w@interview-backend.p4usgoo.mongodb.net/interview?retryWrites=true&w=majority&appName=Interview-backend";
 const SESSION_SECRET =
   process.env.SESSION_SECRET || "your-secret-key-change-in-production";
-const SERVICE_NAME = "auth-service";
+const SERVICE_NAME = "live-interview-service";
 const SERVICE_VERSION = "v1.0.0";
 // Enhanced MongoDB connection with retry logic
 const connectWithRetry = () => {
@@ -119,7 +119,14 @@ app.use(passport.session());
 
 // Routes
 app.use("/live-interview", liveInterviewRoutes);
-
+app.get("/", (req, res) => {
+  res.json({
+    service: SERVICE_NAME,
+    version: SERVICE_VERSION,
+    status: "running",
+    timestamp: new Date().toISOString(),
+  });
+});
 // Health check
 app.get("/health", (req, res) => {
   res.status(200).json({
