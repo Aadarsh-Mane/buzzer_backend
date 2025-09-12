@@ -4,7 +4,8 @@ import {
   getNextQuestion,
   submitAnswer,
   submitInterview,
-  getInterviewResults
+  getInterviewResults,
+  getInterviewHistory
 } from '../controllers/mockInterviewController.js';
 
 const router = express.Router();
@@ -23,5 +24,8 @@ router.post('/:id/submit', submitInterview);
 
 // 5. Get result and feedback
 router.get('/:id/results', getInterviewResults);
+
+// 6. Get interview history for a user
+router.get('/user/:userId/history', getInterviewHistory);
 
 export default router;
