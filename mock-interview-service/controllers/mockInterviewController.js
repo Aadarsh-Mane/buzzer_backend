@@ -168,3 +168,68 @@ export const getInterviewResults = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// 6. Get interview history for a user
+export const getInterviewHistory = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { page = 1, limit = 10, status, position, level } = req.query;
+    
+    // Build filter object
+    const filter = { userId };
+    if (status) filter.status = status;
+    if (position) filter.position = { $regex: position, $options: 'i' }; // Case insensitive search
+    if (level) filter.level = level;
+    
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Get total count for pagination
+    const totalCount = await MockInterview.countDocuments(filter);
+    
+    // Get interviews with pagination and sorting (newest first)
+    const interviews = await MockInterview.find(filter)
+      .select('position level status startTime endTime overallScore questionCount')
+      .sort({ startTime: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+    
+    // Calculate additional metadata
+    const interviewsWithMetadata = interviews.map(interview => ({
+      _id: interview._id,
+      position: interview.position,
+      level: interview.level,
+      status: interview.status,
+      startTime: interview.startTime,
+      endTime: interview.endTime,
+      duration: interview.endTime ? (interview.endTime - interview.startTime) : null,
+      overallScore: interview.overallScore || null,
+      questionCount: interview.questionCount
+    }));
+    
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(totalCount / parseInt(limit));
+    const hasNextPage = parseInt(page) < totalPages;
+    const hasPrevPage = parseInt(page) > 1;
+    
+    res.status(200).json({
+      interviews: interviewsWithMetadata,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages,
+        totalCount,
+        hasNextPage,
+        hasPrevPage,
+        limit: parseInt(limit)
+      },
+      filters: {
+        status,
+        position,
+        level
+      }
+    });
+  } catch (err) {
+    console.error("Get interview history error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
