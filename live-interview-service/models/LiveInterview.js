@@ -36,14 +36,22 @@ const LiveInterviewSchema = new mongoose.Schema({
     email: { type: String, required: true },
     resume: { type: String }, // Cloudinary URL
     joinedAt: { type: Date },
-    leftAt: { type: Date }
+    leftAt: { type: Date },
+    // Media status for video calling
+    audioEnabled: { type: Boolean, default: true },
+    videoEnabled: { type: Boolean, default: false },
+    mediaReady: { type: Boolean, default: false }
   },
   interviewer: {
     userId: { type: String, required: true },
     name: { type: String, required: true },
     email: { type: String, required: true },
     joinedAt: { type: Date },
-    leftAt: { type: Date }
+    leftAt: { type: Date },
+    // Media status for video calling
+    audioEnabled: { type: Boolean, default: true },
+    videoEnabled: { type: Boolean, default: false },
+    mediaReady: { type: Boolean, default: false }
   },
   
   // Interview details
