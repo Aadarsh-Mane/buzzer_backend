@@ -22,7 +22,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:4001",
+    origin: "*",
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -68,7 +68,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(morgan('combined'));
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:4001",
+    origin: "*",
     credentials: true,
   })
 );
