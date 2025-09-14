@@ -192,6 +192,10 @@ io.on("connection", (socket) => {
         role,
         joinedAt: new Date()
       });
+      
+      console.log(colors.cyan(`📊 Interview ${interviewId} participants:`);
+      console.log(colors.cyan(`  - Candidate: ${interview.candidate.name} (${interview.candidate.userId}) - Media: ${interview.candidate.mediaReady ? 'Ready' : 'Not Ready'}`));
+      console.log(colors.cyan(`  - Interviewer: ${interview.interviewer.name} (${interview.interviewer.userId}) - Media: ${interview.interviewer.mediaReady ? 'Ready' : 'Not Ready'}`));
 
     } catch (err) {
       console.error("Error in join-interview:", err);
@@ -241,16 +245,27 @@ io.on("connection", (socket) => {
         videoEnabled
       });
 
-      // If user turned on video, emit user-media-ready
+      // If user turned on video, emit user-media-ready to trigger connections
       if (videoEnabled) {
         socket.to(interviewId).emit("user-media-ready", {
-          interviewId,
           userId,
-          role
+          role,
+          interviewId
+        });
+        
+        // Also broadcast to everyone that this user has video ready
+        io.to(interviewId).emit("participant-video-ready", {
+          userId,
+          role,
+          interviewId,
+          hasVideo: true
         });
       }
 
       console.log(colors.green(`✅ Media status broadcasted for ${userId}`));
+      console.log(colors.cyan(`📊 Current media status:`);
+      console.log(colors.cyan(`  - Candidate: Video=${interview.candidate.videoEnabled}, Audio=${interview.candidate.audioEnabled}, Ready=${interview.candidate.mediaReady}`));
+      console.log(colors.cyan(`  - Interviewer: Video=${interview.interviewer.videoEnabled}, Audio=${interview.interviewer.audioEnabled}, Ready=${interview.interviewer.mediaReady}`));
     } catch (err) {
       console.error(colors.red('Error in media status handling:'), err);
       socket.emit('media-error', { error: err.message });
@@ -582,9 +597,9 @@ io.on("connection", (socket) => {
   });
 
   // Enhanced WebRTC signaling events for video calling
-  socket.on('webrtc-offer', async ({ interviewId, offer, to }) => {
+  socket.on('webrtc-offer', async ({ interviewId, offer, targetUserId }) => {
     try {
-      console.log(colors.blue(`📤 WebRTC offer from ${socketUserId} to ${to} in interview ${interviewId}`));
+      console.log(colors.blue(`📤 WebRTC offer from ${socketUserId} to ${targetUserId} in interview ${interviewId}`));
       
       // Validate the interview exists and user is a participant
       const interview = await LiveInterview.findOne({ interviewId });
@@ -608,23 +623,21 @@ io.on("connection", (socket) => {
 
       // Find the socket for the target user
       const targetSocket = Array.from(io.sockets.sockets.values()).find(s => 
-        s.rooms.has(interviewId) && s.socketUserId === to
+        s.rooms.has(interviewId) && s.socketUserId === targetUserId
       );
       
       if (targetSocket) {
         targetSocket.emit('webrtc-offer', {
           offer,
           from: socketUserId,
-          to,
           interviewId
         });
-        console.log(colors.green(`✅ Offer forwarded to ${to}`));
+        console.log(colors.green(`✅ Offer forwarded to ${targetUserId}`));
       } else {
         // Fallback to room broadcast
         socket.to(interviewId).emit('webrtc-offer', {
           offer,
           from: socketUserId,
-          to,
           interviewId
         });
         console.log(colors.yellow(`⚠️ Offer broadcasted to room (target socket not found)`));
@@ -635,9 +648,9 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on('webrtc-answer', async ({ interviewId, answer, to }) => {
+  socket.on('webrtc-answer', async ({ interviewId, answer, targetUserId }) => {
     try {
-      console.log(colors.blue(`📥 WebRTC answer from ${socketUserId} to ${to} in interview ${interviewId}`));
+      console.log(colors.blue(`📥 WebRTC answer from ${socketUserId} to ${targetUserId} in interview ${interviewId}`));
       
       // Validate the interview exists and user is a participant
       const interview = await LiveInterview.findOne({ interviewId });
@@ -661,23 +674,21 @@ io.on("connection", (socket) => {
 
       // Find the socket for the target user
       const targetSocket = Array.from(io.sockets.sockets.values()).find(s => 
-        s.rooms.has(interviewId) && s.socketUserId === to
+        s.rooms.has(interviewId) && s.socketUserId === targetUserId
       );
       
       if (targetSocket) {
         targetSocket.emit('webrtc-answer', {
           answer,
           from: socketUserId,
-          to,
           interviewId
         });
-        console.log(colors.green(`✅ Answer forwarded to ${to}`));
+        console.log(colors.green(`✅ Answer forwarded to ${targetUserId}`));
       } else {
         // Fallback to room broadcast
         socket.to(interviewId).emit('webrtc-answer', {
           answer,
           from: socketUserId,
-          to,
           interviewId
         });
         console.log(colors.yellow(`⚠️ Answer broadcasted to room (target socket not found)`));
@@ -688,9 +699,9 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on('webrtc-ice-candidate', async ({ interviewId, candidate, to }) => {
+  socket.on('webrtc-ice-candidate', async ({ interviewId, candidate, targetUserId }) => {
     try {
-      console.log(colors.blue(`🧊 ICE candidate from ${socketUserId} to ${to} in interview ${interviewId}`));
+      console.log(colors.blue(`🧊 ICE candidate from ${socketUserId} to ${targetUserId} in interview ${interviewId}`));
       
       // Validate the interview exists and user is a participant
       const interview = await LiveInterview.findOne({ interviewId });
@@ -714,23 +725,21 @@ io.on("connection", (socket) => {
 
       // Find the socket for the target user
       const targetSocket = Array.from(io.sockets.sockets.values()).find(s => 
-        s.rooms.has(interviewId) && s.socketUserId === to
+        s.rooms.has(interviewId) && s.socketUserId === targetUserId
       );
       
       if (targetSocket) {
         targetSocket.emit('webrtc-ice-candidate', {
           candidate,
           from: socketUserId,
-          to,
           interviewId
         });
-        console.log(colors.green(`✅ ICE candidate forwarded to ${to}`));
+        console.log(colors.green(`✅ ICE candidate forwarded to ${targetUserId}`));
       } else {
         // Fallback to room broadcast
         socket.to(interviewId).emit('webrtc-ice-candidate', {
           candidate,
           from: socketUserId,
-          to,
           interviewId
         });
         console.log(colors.yellow(`⚠️ ICE candidate broadcasted to room (target socket not found)`));
