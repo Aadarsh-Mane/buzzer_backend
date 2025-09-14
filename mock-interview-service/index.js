@@ -8,19 +8,26 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: [
-      "*",
-      // "http://localhost:4001",
-      // "http://localhost:3000",
-      // "https://yourdomain.com",
-      // "https://auth.lanbix.com",
-      // "http://localhost:3000",
-      // "http://localhost:4001",
-      // "http://localhost:6001",
-      // "https://interview-backend-rho.vercel.app",
-      // "https://salapakshi.vercel.app",
-    ],
+    origin: true, // This allows ALL origins (equivalent to *)
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "X-API-Key",
+      "Cache-Control",
+      "Accept",
+      "Origin",
+      "User-Agent",
+      "DNT",
+      "If-Modified-Since",
+      "Keep-Alive",
+      "X-Requested-With",
+      "If-None-Match",
+    ],
+    exposedHeaders: ["X-Total-Count", "X-Rate-Limit-Remaining"],
+    optionsSuccessStatus: 200,
   })
 );
 

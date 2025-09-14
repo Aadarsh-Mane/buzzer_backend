@@ -47,8 +47,26 @@ const connectWithRetry = () => {
 app.use(express.json());
 app.use(
   cors({
-    origin: "*",
+    origin: true, // This allows ALL origins (equivalent to *)
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "X-API-Key",
+      "Cache-Control",
+      "Accept",
+      "Origin",
+      "User-Agent",
+      "DNT",
+      "If-Modified-Since",
+      "Keep-Alive",
+      "X-Requested-With",
+      "If-None-Match",
+    ],
+    exposedHeaders: ["X-Total-Count", "X-Rate-Limit-Remaining"],
+    optionsSuccessStatus: 200,
   })
 );
 
@@ -105,7 +123,7 @@ io.on("connection", (socket) => {
 
       socket.join(roomId);
       activeRooms.add(roomId);
-      
+
       // Store userId on socket for WebRTC signaling
       socket.userId = userId;
 
@@ -122,7 +140,7 @@ io.on("connection", (socket) => {
           joinedAt: new Date(),
           audioEnabled: true,
           videoEnabled: false,
-          mediaReady: false
+          mediaReady: false,
         });
       } else {
         participant.status = "joined";
@@ -152,9 +170,9 @@ io.on("connection", (socket) => {
       await updateParticipants(roomId);
 
       // Get current participants for this user
-      const currentParticipants = await Participant.find({ 
-        roomId, 
-        status: "joined" 
+      const currentParticipants = await Participant.find({
+        roomId,
+        status: "joined",
       }).lean();
 
       // Notify user of successful join
@@ -162,15 +180,15 @@ io.on("connection", (socket) => {
         success: true,
         roomId,
         userId,
-        participants: currentParticipants.map(p => ({
+        participants: currentParticipants.map((p) => ({
           userId: p.userId,
           name: p.name,
           role: p.role,
           status: p.status,
           audioEnabled: p.audioEnabled,
           videoEnabled: p.videoEnabled,
-          mediaReady: p.mediaReady
-        }))
+          mediaReady: p.mediaReady,
+        })),
       });
 
       // Notify others about new participant
@@ -181,9 +199,9 @@ io.on("connection", (socket) => {
         audioEnabled: participant.audioEnabled,
         videoEnabled: participant.videoEnabled,
         mediaReady: participant.mediaReady,
-        joinedAt: participant.joinedAt
+        joinedAt: participant.joinedAt,
       });
-      
+
       console.log(`✅ ${userId} successfully joined room ${roomId}`);
     } catch (err) {
       console.error("Error in join-room:", err);
@@ -217,8 +235,10 @@ io.on("connection", (socket) => {
   // Enhanced WebRTC signaling for video calling
   socket.on("webrtc-offer", async ({ roomId, userId, offer, targetUserId }) => {
     try {
-      console.log(`📤 WebRTC offer from ${userId} to ${targetUserId} in room ${roomId}`);
-      
+      console.log(
+        `📤 WebRTC offer from ${userId} to ${targetUserId} in room ${roomId}`
+      );
+
       // Validate the user is in the room
       const participant = await Participant.findOne({
         roomId,
@@ -237,13 +257,13 @@ io.on("connection", (socket) => {
 
       // Find target user's socket and send offer
       const roomSockets = await io.in(roomId).fetchSockets();
-      const targetSocket = roomSockets.find(s => s.userId === targetUserId);
-      
+      const targetSocket = roomSockets.find((s) => s.userId === targetUserId);
+
       if (targetSocket) {
         targetSocket.emit("webrtc-offer", {
           fromUserId: userId,
           offer: offer,
-          roomId
+          roomId,
         });
         console.log(`✅ Offer forwarded to ${targetUserId}`);
       } else {
@@ -256,128 +276,143 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("webrtc-answer", async ({ roomId, userId, answer, targetUserId }) => {
-    try {
-      console.log(`📥 WebRTC answer from ${userId} to ${targetUserId} in room ${roomId}`);
-      
-      // Validate the user is in the room
-      const participant = await Participant.findOne({
-        roomId,
-        userId,
-        status: "joined",
-      });
+  socket.on(
+    "webrtc-answer",
+    async ({ roomId, userId, answer, targetUserId }) => {
+      try {
+        console.log(
+          `📥 WebRTC answer from ${userId} to ${targetUserId} in room ${roomId}`
+        );
 
-      if (!participant) {
-        throw new Error("Unauthorized signaling attempt");
-      }
-
-      // Validate answer format
-      if (!answer || !answer.sdp) {
-        throw new Error("Invalid answer format");
-      }
-
-      // Find target user's socket and send answer
-      const roomSockets = await io.in(roomId).fetchSockets();
-      const targetSocket = roomSockets.find(s => s.userId === targetUserId);
-      
-      if (targetSocket) {
-        targetSocket.emit("webrtc-answer", {
-          fromUserId: userId,
-          answer: answer,
-          roomId
+        // Validate the user is in the room
+        const participant = await Participant.findOne({
+          roomId,
+          userId,
+          status: "joined",
         });
-        console.log(`✅ Answer forwarded to ${targetUserId}`);
-      } else {
-        console.log(`❌ Target user ${targetUserId} not found in room`);
-        socket.emit("webrtc-error", { error: "Target user not found" });
+
+        if (!participant) {
+          throw new Error("Unauthorized signaling attempt");
+        }
+
+        // Validate answer format
+        if (!answer || !answer.sdp) {
+          throw new Error("Invalid answer format");
+        }
+
+        // Find target user's socket and send answer
+        const roomSockets = await io.in(roomId).fetchSockets();
+        const targetSocket = roomSockets.find((s) => s.userId === targetUserId);
+
+        if (targetSocket) {
+          targetSocket.emit("webrtc-answer", {
+            fromUserId: userId,
+            answer: answer,
+            roomId,
+          });
+          console.log(`✅ Answer forwarded to ${targetUserId}`);
+        } else {
+          console.log(`❌ Target user ${targetUserId} not found in room`);
+          socket.emit("webrtc-error", { error: "Target user not found" });
+        }
+      } catch (err) {
+        console.error("Error in WebRTC answer handling:", err);
+        socket.emit("webrtc-error", { error: err.message });
       }
-    } catch (err) {
-      console.error("Error in WebRTC answer handling:", err);
-      socket.emit("webrtc-error", { error: err.message });
     }
-  });
+  );
 
-  socket.on("webrtc-ice-candidate", async ({ roomId, userId, candidate, targetUserId }) => {
-    try {
-      console.log(`🧊 ICE candidate from ${userId} to ${targetUserId} in room ${roomId}`);
-      
-      // Validate the user is in the room
-      const participant = await Participant.findOne({
-        roomId,
-        userId,
-        status: "joined",
-      });
+  socket.on(
+    "webrtc-ice-candidate",
+    async ({ roomId, userId, candidate, targetUserId }) => {
+      try {
+        console.log(
+          `🧊 ICE candidate from ${userId} to ${targetUserId} in room ${roomId}`
+        );
 
-      if (!participant) {
-        throw new Error("Unauthorized signaling attempt");
-      }
-
-      // Validate candidate format
-      if (!candidate) {
-        throw new Error("Invalid ICE candidate format");
-      }
-
-      // Find target user's socket and send ICE candidate
-      const roomSockets = await io.in(roomId).fetchSockets();
-      const targetSocket = roomSockets.find(s => s.userId === targetUserId);
-      
-      if (targetSocket) {
-        targetSocket.emit("webrtc-ice-candidate", {
-          fromUserId: userId,
-          candidate: candidate,
-          roomId
+        // Validate the user is in the room
+        const participant = await Participant.findOne({
+          roomId,
+          userId,
+          status: "joined",
         });
-        console.log(`✅ ICE candidate forwarded to ${targetUserId}`);
-      } else {
-        console.log(`❌ Target user ${targetUserId} not found in room`);
-        socket.emit("webrtc-error", { error: "Target user not found" });
+
+        if (!participant) {
+          throw new Error("Unauthorized signaling attempt");
+        }
+
+        // Validate candidate format
+        if (!candidate) {
+          throw new Error("Invalid ICE candidate format");
+        }
+
+        // Find target user's socket and send ICE candidate
+        const roomSockets = await io.in(roomId).fetchSockets();
+        const targetSocket = roomSockets.find((s) => s.userId === targetUserId);
+
+        if (targetSocket) {
+          targetSocket.emit("webrtc-ice-candidate", {
+            fromUserId: userId,
+            candidate: candidate,
+            roomId,
+          });
+          console.log(`✅ ICE candidate forwarded to ${targetUserId}`);
+        } else {
+          console.log(`❌ Target user ${targetUserId} not found in room`);
+          socket.emit("webrtc-error", { error: "Target user not found" });
+        }
+      } catch (err) {
+        console.error("Error in ICE candidate handling:", err);
+        socket.emit("webrtc-error", { error: err.message });
       }
-    } catch (err) {
-      console.error("Error in ICE candidate handling:", err);
-      socket.emit("webrtc-error", { error: err.message });
     }
-  });
+  );
 
   // Media stream status updates
-  socket.on("media-status", async ({ roomId, userId, audioEnabled, videoEnabled }) => {
-    try {
-      console.log(`🎥 Media status update from ${userId}: audio=${audioEnabled}, video=${videoEnabled}`);
-      
-      // Validate the user is in the room
-      const participant = await Participant.findOne({
-        roomId,
-        userId,
-        status: "joined",
-      });
+  socket.on(
+    "media-status",
+    async ({ roomId, userId, audioEnabled, videoEnabled }) => {
+      try {
+        console.log(
+          `🎥 Media status update from ${userId}: audio=${audioEnabled}, video=${videoEnabled}`
+        );
 
-      if (!participant) {
-        throw new Error("Unauthorized media status update");
+        // Validate the user is in the room
+        const participant = await Participant.findOne({
+          roomId,
+          userId,
+          status: "joined",
+        });
+
+        if (!participant) {
+          throw new Error("Unauthorized media status update");
+        }
+
+        // Update participant media status
+        participant.audioEnabled = audioEnabled;
+        participant.videoEnabled = videoEnabled;
+        await participant.save();
+
+        // Broadcast media status to all participants in room
+        socket.to(roomId).emit("media-status-update", {
+          userId,
+          audioEnabled,
+          videoEnabled,
+        });
+
+        console.log(`✅ Media status broadcasted for ${userId}`);
+      } catch (err) {
+        console.error("Error in media status handling:", err);
+        socket.emit("media-error", { error: err.message });
       }
-
-      // Update participant media status
-      participant.audioEnabled = audioEnabled;
-      participant.videoEnabled = videoEnabled;
-      await participant.save();
-
-      // Broadcast media status to all participants in room
-      socket.to(roomId).emit("media-status-update", {
-        userId,
-        audioEnabled,
-        videoEnabled
-      });
-
-      console.log(`✅ Media status broadcasted for ${userId}`);
-    } catch (err) {
-      console.error("Error in media status handling:", err);
-      socket.emit("media-error", { error: err.message });
     }
-  });
+  );
 
   // User ready for video call
   socket.on("user-media-ready", async ({ roomId, userId }) => {
     try {
       console.log(`📹 User media ready: ${userId} in room ${roomId}`);
-      
+
       // Validate the user is in the room
       const participant = await Participant.findOne({
         roomId,
@@ -397,7 +432,7 @@ io.on("connection", (socket) => {
       socket.to(roomId).emit("user-media-ready", {
         userId,
         name: participant.name,
-        role: participant.role
+        role: participant.role,
       });
 
       console.log(`✅ Media ready broadcasted for ${userId}`);
