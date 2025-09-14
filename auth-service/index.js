@@ -21,12 +21,13 @@ import "./config/passport.js";
 const NODE_ENV = process.env.NODE_ENV || "development";
 const PORT = process.env.PORT || 6001;
 const ALLOWED_ORIGINS = [
-  "https://auth.lanbix.com",
-  "http://localhost:3000",
-  "http://localhost:4001",
-  "http://localhost:6001",
-  "https://interview-backend-rho.vercel.app",
-  "https://salapakshi.vercel.app",
+  "*",
+  // "https://auth.lanbix.com",
+  // "http://localhost:3000",
+  // "http://localhost:4001",
+  // "http://localhost:6001",
+  // "https://interview-backend-rho.vercel.app",
+  // "https://salapakshi.vercel.app",
 ];
 const MONGODB_URI =
   process.env.MONGODB_URI ||
