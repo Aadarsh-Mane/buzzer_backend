@@ -96,6 +96,21 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(compression());
 
 // CORS Configuration
+// app.use(
+//   cors({
+//     origin: true, // This allows ALL origins (equivalent to *)
+//     credentials: true,
+//     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+//     allowedHeaders: [
+//       "Content-Type",
+//       "Authorization",
+//       "X-Requested-With",
+//       "X-API-Key",
+//     ],
+//     exposedHeaders: ["X-Total-Count", "X-Rate-Limit-Remaining"],
+//     optionsSuccessStatus: 200,
+//   })
+// );
 app.use(
   cors({
     origin: true, // This allows ALL origins (equivalent to *)
@@ -106,11 +121,13 @@ app.use(
       "Authorization",
       "X-Requested-With",
       "X-API-Key",
+      "Cache-Control",
     ],
     exposedHeaders: ["X-Total-Count", "X-Rate-Limit-Remaining"],
     optionsSuccessStatus: 200,
   })
 );
+
 // app.use(
 //   cors({
 //     origin: function (origin, callback) {
