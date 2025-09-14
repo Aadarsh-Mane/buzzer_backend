@@ -98,15 +98,7 @@ app.use(compression());
 // CORS Configuration
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps, curl, Postman)
-      if (!origin) return callback(null, true);
-      if (ALLOWED_ORIGINS.includes(origin)) {
-        return callback(null, true);
-      }
-      console.warn(`CORS blocked origin: ${origin}`);
-      return callback(new Error("Not allowed by CORS"));
-    },
+    origin: true, // This allows ALL origins (equivalent to *)
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: [
@@ -119,6 +111,29 @@ app.use(
     optionsSuccessStatus: 200,
   })
 );
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       // Allow requests with no origin (like mobile apps, curl, Postman)
+//       if (!origin) return callback(null, true);
+//       if (ALLOWED_ORIGINS.includes(origin)) {
+//         return callback(null, true);
+//       }
+//       console.warn(`CORS blocked origin: ${origin}`);
+//       return callback(new Error("Not allowed by CORS"));
+//     },
+//     credentials: true,
+//     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+//     allowedHeaders: [
+//       "Content-Type",
+//       "Authorization",
+//       "X-Requested-With",
+//       "X-API-Key",
+//     ],
+//     exposedHeaders: ["X-Total-Count", "X-Rate-Limit-Remaining"],
+//     optionsSuccessStatus: 200,
+//   })
+// );
 
 // Session Configuration
 app.use(
